@@ -1,38 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function AdminLoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState(''); // Local error for form validation or login failures
+    const [formError, setFormError] = useState(''); // Renamed from 'error' for clarity, stores local and auth errors for this form
     const { login, error: authContextError, clearError: authClearError, isLoading } = useAuth();
-    // useNavigate is not directly used here for navigation after login, as AuthContext handles it.
+
+    // Clear auth context error when component mounts, if one was set from another page/action.
+    useEffect(() => {
+        if (authContextError) {
+            authClearError();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run only on mount to clear pre-existing auth errors
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); // Clear local error
-        if (authContextError) {
-            authClearError(); // Clear error from previous AuthContext attempts
+        setFormError(''); // Clear previous local form error
+        if (authContextError) { // Clear error from AuthContext if any lingered from other actions before this submission attempt
+            authClearError();
         }
 
         if (!email.trim() || !password.trim()) {
-            setError('Email and password are required.');
+            setFormError('Email and password are required.');
             return;
         }
 
         try {
-            const success = await login(email, password); // login from AuthContext
-            if (!success) {
-                // Login failed. AuthContext should have set its 'error' state.
-                // Display that error. If authContextError is null for some reason, provide a fallback.
-                setError(authContextError || 'Failed to login. Please check your credentials.');
+            // Pass credentials as an object, which is expected by AuthContext's login function
+            const result = await login({ email, password }); 
+            if (!result.success) {
+                // result.message comes from AuthContext's login error handling (API errors, etc.)
+                setFormError(result.message || 'Failed to login. Please check your credentials.');
             }
             // If successful, AuthContext's login function handles navigation.
         } catch (err) {
-            // This catch is for unexpected errors not handled by AuthContext's login (e.g., network issues before API call)
-            console.error("Unexpected error during login attempt:", err);
-            setError('An unexpected error occurred. Please try again.');
+            // This catch is for unexpected errors not directly handled by AuthContext's login promise
+            // (e.g., if login itself throws an error before making the API call, though unlikely with current setup)
+            console.error("Unexpected error during login submission:", err);
+            setFormError('An unexpected error occurred. Please try again.');
         }
     };
 
@@ -46,9 +54,9 @@ function AdminLoginPage() {
                     Admin Login
                 </h1>
                 
-                {error && (
+                {formError && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6 text-sm" role="alert">
-                        <p>{error}</p>
+                        <p id="form-feedback-alert">{formError}</p>
                     </div>
                 )}
 
@@ -67,11 +75,9 @@ function AdminLoginPage() {
                             onChange={(e) => setEmail(e.target.value)}
                             required 
                             autoComplete="email"
-                            aria-describedby={error && email.trim() === '' ? "emailErrorText" : undefined}
+                            aria-describedby={formError ? "form-feedback-alert" : undefined}
+                            aria-invalid={!!formError}
                         />
-                        {/* Example inline error, not used if global error alert is preferred
-                        {error && email.trim() === '' && <p className="text-red-600 text-xs italic mt-1" id=\"emailErrorText\">Please enter a valid email.</p>} 
-                        */}
                     </div>
                     
                     <div className="mb-8 text-left">
@@ -88,11 +94,9 @@ function AdminLoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             required 
                             autoComplete="current-password"
-                            aria-describedby={error && password.trim() === '' ? "passwordErrorText" : undefined}
+                            aria-describedby={formError ? "form-feedback-alert" : undefined}
+                            aria-invalid={!!formError}
                         />
-                         {/* Example inline error
-                         {error && password.trim() === '' && <p className="text-red-600 text-xs italic mt-1" id=\"passwordErrorText\">Password is required.</p>} 
-                         */}
                     </div>
                     
                     <button 
