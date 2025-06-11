@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-// import api from '../services/api'; // Will be used once api.js is implemented
+// import { Link } from 'react-router-dom'; // Removed as Link is not used directly in HomePage anymore
+import api from '../services/api'; // Uncommented and will be used
+import PostCard from '../components/PostCard'; // Assuming PostCard is the component for displaying posts
 
-const ReadMoreArrow = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 ml-1 inline-block">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
-  </svg>
-);
+// ReadMoreArrow component (previously in HomePage) is now part of PostCard's concerns if needed,
+// or PostCard uses its own arrow icon, which it does (ArrowRightIcon).
 
 const HomePage = () => {
   const [posts, setPosts] = useState([]);
@@ -17,33 +15,14 @@ const HomePage = () => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        // const response = await api.getAllPosts(); // Assuming api.getAllPosts() exists
-        // setPosts(response.data.posts); // Adjust based on actual API response structure, e.g., response.data.posts if paginated
-        // Placeholder data:
-        setPosts([
-          {
-            id: 1,
-            title: 'The Future of Web Development',
-            created_at: '2023-10-26T10:00:00Z',
-            excerpt: 'Web development is constantly evolving. Join us as we explore the upcoming trends, tools, and technologies that are shaping the future of the web...'
-          },
-          {
-            id: 2,
-            title: 'Mastering Python for Data Science',
-            created_at: '2023-10-20T14:30:00Z',
-            excerpt: 'Python has become the go-to language for data science. This post dives into the essential libraries and techniques to master Python for your data projects...'
-          },
-          {
-            id: 3,
-            title: 'A Guide to Minimalist Design',
-            created_at: '2023-10-15T09:15:00Z',
-            excerpt: 'Less is more. Discover the principles of minimalist design and how to apply them to create clean, impactful, and user-friendly interfaces...'
-          },
-        ]);
+        const response = await api.get('/posts'); // Fetch actual posts
+        // Assuming API returns { posts: [...], total_pages: ..., ... }
+        // For now, we are only using the posts array.
+        setPosts(response.data.posts || []); // Ensure posts is an array even if API returns null/undefined
         setError(null);
       } catch (err) {
+        console.error('Error fetching posts:', err.response ? err.response.data : err.message);
         setError('Failed to fetch posts. Please try again later.');
-        console.error('Error fetching posts:', err);
         setPosts([]); // Clear posts on error
       } finally {
         setLoading(false);
@@ -71,30 +50,9 @@ const HomePage = () => {
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {posts.map((post) => (
-          <article 
-            key={post.id} 
-            className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1"
-          >
-            <div className="p-6 flex-grow flex flex-col">
-              <Link to={`/post/${post.id}`} className="block">
-                <h2 className="font-secondary text-xl sm:text-2xl font-semibold text-neutral-dark mb-2 hover:text-primary transition-colors">
-                  {post.title}
-                </h2>
-              </Link>
-              <p className="text-sm text-secondary mb-3">
-                Published on {new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-              <p className="text-secondary mb-4 flex-grow leading-relaxed">
-                {post.excerpt}
-              </p>
-              <Link 
-                to={`/post/${post.id}`} 
-                className="self-start mt-auto font-primary text-base font-semibold text-primary hover:text-accent transition-colors group"
-              >
-                Read More <ReadMoreArrow />
-              </Link>
-            </div>
-          </article>
+          // Use PostCard component to render each post.
+          // This approach is more modular than rendering article content directly in HomePage.
+          <PostCard key={post.id} post={post} />
         ))}
       </div>
     </div>

@@ -11,8 +11,8 @@ const formatDate = (dateString) => {
         });
     } catch (error) {
         console.error('Error formatting date:', dateString, error);
-        // Fallback to returning the original string if formatting fails
-        const datePart = dateString.split('T')[0];
+        // Fallback to returning the date part of the string if formatting fails
+        const datePart = String(dateString).split('T')[0];
         return datePart; 
     }
 };
@@ -25,36 +25,42 @@ const ArrowRightIcon = () => (
 
 function PostCard({ post }) {
     // Ensure post and post.id exist before trying to render
-    if (!post || typeof post.id === 'undefined') return null;
+    if (!post || typeof post.id === 'undefined') {
+        // Optionally log an error or return a placeholder if this case is unexpected in a list
+        // console.warn('PostCard received invalid post data:', post);
+        return null;
+    }
 
     const postTitle = post.title || 'Untitled Post';
-    const postContent = post.content || '';
+    const postContent = post.content || ''; // Content might be HTML, will be stripped for excerpt
     
     // Basic excerpt: strip HTML and take the first 150 characters.
-    const plainTextContent = postContent.replace(/<[^>]+>/g, ''); 
+    // Assumes post.content is a string. If it can be other types, add checks.
+    const plainTextContent = String(postContent).replace(/<[^>]+>/g, ''); 
     let excerpt = plainTextContent;
     if (plainTextContent.length > 150) {
-        excerpt = plainTextContent.substring(0, 150) + '...';
+        excerpt = plainTextContent.substring(0, 150).trimEnd() + '...';
     }
 
     return (
         <article className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
             <div className="p-5 sm:p-6 flex flex-col flex-grow">
-                <Link to={`/post/${post.id}`} className="block mb-1 sm:mb-2">
+                <Link to={`/post/${post.id}`} className="block mb-1 sm:mb-2" aria-label={`View post: ${postTitle}`}>
                     <h2 className="font-secondary text-lg sm:text-xl font-semibold text-neutral-dark hover:text-primary transition-colors leading-tight">
                         {postTitle}
                     </h2>
                 </Link>
                 <p className="text-xs sm:text-sm text-secondary mb-3 sm:mb-4">
                     Published on {formatDate(post.created_at)}
-                    {post.author && post.author.username && <span className="italic"> by {post.author.username}</span>}
+                    {/* Use post.author_username as returned by the API's to_dict() method */}
+                    {post.author_username && <span className="italic"> by {post.author_username}</span>}
                 </p>
                 <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-4 sm:mb-5 flex-grow">
                     {excerpt}
                 </p>
                 <Link 
                     to={`/post/${post.id}`} 
-                    className="group self-start inline-flex items-center text-sm sm:text-base font-semibold text-primary hover:text-accent transition-colors"
+                    className="group self-start inline-flex items-center text-sm sm:text-base font-semibold text-primary hover:text-accent transition-colors mt-auto"
                     aria-label={`Read more about ${postTitle}`}
                 >
                     Read More 
