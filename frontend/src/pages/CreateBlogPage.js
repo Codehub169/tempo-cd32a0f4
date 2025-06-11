@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import api from '../services/api'; 
+import api from '../services/api'; // This imports apiClient as default
 
 function CreateBlogPage() {
     const [title, setTitle] = useState('');
@@ -23,38 +23,43 @@ function CreateBlogPage() {
         }
 
         try {
+            // api is the axios instance from ../services/api.js
             await api.post('/posts', { title, content }, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}` // Token is already added by interceptor in api.js, but explicit here is also fine.
                 }
             });
             setSuccess('Blog post published successfully!');
             setTitle('');
             setContent('');
-            setTimeout(() => setSuccess(''), 3000);
+            // Clear success message after a few seconds
+            const timer = setTimeout(() => setSuccess(''), 3000);
+            // It's good practice to clear timers on component unmount if the component could unmount before the timer fires.
+            // However, in this specific case (form submission success), it's less critical.
         } catch (err) {
             setError(err.response?.data?.message || err.message || 'Failed to publish post.');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     return (
-        <div className="bg-neutral-100 min-h-screen pb-10"> 
-            {/* Assuming Navbar is rendered globally in App.js and adapts based on auth state */}
+        <div className="bg-neutral-light min-h-screen pb-10"> 
+            {/* Assuming Navbar is rendered globally in App.js */}
             
             <main className="pt-10">
                 <div className="container mx-auto px-4 max-w-3xl">
-                    <h1 className="font-secondary text-3xl font-semibold text-neutral-800 mb-8">
+                    <h1 className="font-secondary text-3xl font-semibold text-neutral-dark mb-8">
                         Create New Blog Post
                     </h1>
                     
                     {success && (
-                        <div className="bg-accent-100 border border-accent-400 text-accent-700 px-4 py-3 rounded-md mb-6 text-center font-medium" role="alert">
+                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md mb-6 text-center font-medium" role="alert">
                             {success}
                         </div>
                     )}
                     {error && (
-                        <div className="bg-error-100 border border-error-400 text-error-700 px-4 py-3 rounded-md mb-6 text-center font-medium" role="alert">
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6 text-center font-medium" role="alert">
                             {error}
                         </div>
                     )}
@@ -62,14 +67,14 @@ function CreateBlogPage() {
                     <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md">
                         <form onSubmit={handleSubmit}>
                             <div className="mb-6">
-                                <label htmlFor="postTitle" className="block text-base font-semibold text-neutral-700 mb-2">
+                                <label htmlFor="postTitle" className="block text-base font-semibold text-gray-700 mb-2">
                                     Post Title
                                 </label>
                                 <input 
                                     type="text" 
                                     id="postTitle" 
                                     name="postTitle" 
-                                    className="w-full px-4 py-3 text-base border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                                    className="w-full px-4 py-3 text-base border border-neutral-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                                     placeholder="Enter your post title"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
@@ -78,14 +83,14 @@ function CreateBlogPage() {
                             </div>
                             
                             <div className="mb-8">
-                                <label htmlFor="postContent" className="block text-base font-semibold text-neutral-700 mb-2">
+                                <label htmlFor="postContent" className="block text-base font-semibold text-gray-700 mb-2">
                                     Post Content
                                 </label>
                                 <textarea 
                                     id="postContent" 
                                     name="postContent" 
-                                    className="w-full px-4 py-3 text-base border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors min-h-[250px] resize-y"
-                                    placeholder="Write your blog post here..."
+                                    className="w-full px-4 py-3 text-base border border-neutral-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors min-h-[250px] resize-y"
+                                    placeholder="Write your blog post here... (HTML is allowed, will be sanitized by backend)"
                                     value={content}
                                     onChange={(e) => setContent(e.target.value)}
                                     required 
@@ -95,7 +100,7 @@ function CreateBlogPage() {
                             <div className="text-right">
                                 <button 
                                     type="submit" 
-                                    className={`bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`bg-primary hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     disabled={isLoading}
                                 >
                                     {isLoading ? 'Publishing...' : 'Publish Post'}
@@ -105,7 +110,6 @@ function CreateBlogPage() {
                     </div>
                 </div>
             </main>
-            {/* Footer can be added here or in App.js for global consistency */}
         </div>
     );
 }

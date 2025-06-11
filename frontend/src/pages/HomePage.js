@@ -17,8 +17,8 @@ const HomePage = () => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        // const response = await api.getAllPosts();
-        // setPosts(response.data);
+        // const response = await api.getAllPosts(); // Assuming api.getAllPosts() exists
+        // setPosts(response.data.posts); // Adjust based on actual API response structure, e.g., response.data.posts if paginated
         // Placeholder data:
         setPosts([
           {
@@ -43,7 +43,7 @@ const HomePage = () => {
         setError(null);
       } catch (err) {
         setError('Failed to fetch posts. Please try again later.');
-        console.error(err);
+        console.error('Error fetching posts:', err);
         setPosts([]); // Clear posts on error
       } finally {
         setLoading(false);
@@ -58,12 +58,12 @@ const HomePage = () => {
   }
 
   if (error) {
-    return <div className="container mx-auto px-4 py-8 text-center text-error">{error}</div>;
+    return <div className="container mx-auto px-4 py-8 text-center text-status-error">{error}</div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
-      <h1 className="font-secondary text-3xl sm:text-4xl font-semibold text-text-dark mb-8 md:mb-12 text-center">
+      <h1 className="font-secondary text-3xl sm:text-4xl font-semibold text-neutral-dark mb-8 md:mb-12 text-center">
         Latest Posts
       </h1>
       {posts.length === 0 && !loading && (
@@ -77,14 +77,14 @@ const HomePage = () => {
           >
             <div className="p-6 flex-grow flex flex-col">
               <Link to={`/post/${post.id}`} className="block">
-                <h2 className="font-secondary text-xl sm:text-2xl font-semibold text-text-dark mb-2 hover:text-primary transition-colors">
+                <h2 className="font-secondary text-xl sm:text-2xl font-semibold text-neutral-dark mb-2 hover:text-primary transition-colors">
                   {post.title}
                 </h2>
               </Link>
-              <p className="text-sm text-gray-500 mb-3">
+              <p className="text-sm text-secondary mb-3">
                 Published on {new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
-              <p className="text-gray-600 mb-4 flex-grow leading-relaxed">
+              <p className="text-secondary mb-4 flex-grow leading-relaxed">
                 {post.excerpt}
               </p>
               <Link 

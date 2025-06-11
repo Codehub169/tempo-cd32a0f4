@@ -18,8 +18,8 @@ const ViewBlogPage = () => {
     const fetchPost = async () => {
       setLoading(true);
       try {
-        // const response = await api.getPostById(postId);
-        // setPost(response.data);
+        // const response = await api.getPostById(postId); // Assuming api.getPostById() exists
+        // setPost(response.data); // Adjust based on actual API response structure
         // Placeholder data:
         const dummyPosts = {
           '1': {
@@ -53,7 +53,7 @@ const ViewBlogPage = () => {
         }
       } catch (err) {
         setError('Failed to fetch post. Please try again later.');
-        console.error(err);
+        console.error('Error fetching post:', err);
         setPost(null);
       } finally {
         setLoading(false);
@@ -80,29 +80,31 @@ const ViewBlogPage = () => {
   }
 
   if (error) {
-    return <div className="container mx-auto px-4 py-8 text-center text-error">{error}</div>;
+    return <div className="container mx-auto px-4 py-8 text-center text-status-error">{error}</div>;
   }
 
   if (!post) {
-    return <div className="container mx-auto px-4 py-8 text-center">Post not found.</div>;
+    // This will be shown if fetchPost completes without setting post AND without setting an error.
+    // Given current fetchPost logic, this state is unlikely unless postId is initially undefined/null.
+    return <div className="container mx-auto px-4 py-8 text-center">Post details are unavailable.</div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
       <article className="bg-white rounded-lg shadow-sm p-6 md:p-10">
-        <h1 className="font-secondary text-3xl sm:text-4xl lg:text-5xl font-bold text-text-dark mb-3 leading-tight">
+        <h1 className="font-secondary text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-dark mb-3 leading-tight">
           {post.title}
         </h1>
-        <p className="text-base text-gray-500 mb-8">
+        <p className="text-base text-secondary mb-8">
           Published on {new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} 
           {post.user && `by ${post.user.username}`}
         </p>
-        {/* Backend should sanitize this HTML content before sending it */}
+        {/* Backend should sanitize this HTML content before sending it to prevent XSS */}
         <div 
-          className="prose prose-lg max-w-none text-gray-700 leading-relaxed prose-h2:font-secondary prose-h2:text-2xl prose-h2:md:text-3xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-text-dark prose-h3:font-secondary prose-h3:text-xl prose-h3:md:text-2xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-text-dark prose-a:text-primary prose-a:font-medium hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-6 prose-blockquote:my-6 prose-blockquote:italic prose-blockquote:text-secondary"
+          className="prose prose-lg max-w-none text-gray-700 leading-relaxed prose-h2:font-secondary prose-h2:text-2xl prose-h2:md:text-3xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-neutral-dark prose-h3:font-secondary prose-h3:text-xl prose-h3:md:text-2xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-neutral-dark prose-a:text-primary prose-a:font-medium hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-6 prose-blockquote:my-6 prose-blockquote:italic prose-blockquote:text-secondary"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
-        <div className="mt-10 pt-8 border-t border-gray-200 text-center">
+        <div className="mt-10 pt-8 border-t border-neutral-border text-center">
           <Link 
             to="/"
             className="inline-flex items-center font-primary text-base font-medium text-primary border border-primary rounded-lg px-6 py-3 hover:bg-primary hover:text-white transition-colors duration-200"

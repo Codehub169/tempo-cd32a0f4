@@ -3,15 +3,14 @@ from flask import Flask, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
-from flask_bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt 
 
 # Initialize extensions
-# These are instantiated here and initialized with the app in the factory
 db = SQLAlchemy()
 migrate = Migrate()
-bcrypt = Bcrypt()
+bcrypt = Bcrypt() # Initialized, but User model methods (werkzeug) will be used for core password logic as per BE-AUTH-001.
 
-def create_app(config_class_name=None):
+def create_app(config_object_name='app.config.Config'): # Default to Config class from config.py
     """
     Application factory function to create and configure the Flask app.
     """
@@ -20,27 +19,18 @@ def create_app(config_class_name=None):
                 static_url_path='/'                   # Serve static files from the root URL
                 )
 
-    # Load configuration
-    if config_class_name:
-        app.config.from_object(config_class_name)
-    else:
-        # Default configuration loading from environment variables
-        app.config.from_mapping(
-            SECRET_KEY=os.environ.get('SECRET_KEY', 'default_dev_secret_key_please_change'),
-            SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL', 'sqlite:///./blog.db'),
-            SQLALCHEMY_TRACK_MODIFICATIONS=False,
-            # ADMIN_USERNAME and ADMIN_PASSWORD will be read from .env by models.py or auth logic later
-        )
+    # Load configuration from config.py using the specified config_object_name
+    app.config.from_object(config_object_name)
     
     # Initialize Flask extensions with the app instance
     db.init_app(app)
     migrate.init_app(app, db) # Initialize Flask-Migrate
-    bcrypt.init_app(app)
+    bcrypt.init_app(app) # Initialize Bcrypt
     CORS(app)  # Enable CORS for all routes by default
 
-    # Models and main application routes (Blueprints) will be imported and registered 
-    # once they are created in their respective files (e.g., models.py, routes.py).
-    # For this initial setup, the app can run without them.
+    # Import and register Blueprints
+    from .routes import register_blueprints # Corrected: Import register_blueprints
+    register_blueprints(app) # Corrected: Call register_blueprints
 
     # A simple health check endpoint to verify the API is running
     @app.route('/api/health', methods=['GET'])

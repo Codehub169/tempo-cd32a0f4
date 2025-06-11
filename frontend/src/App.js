@@ -9,7 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 const Footer = () => {
   return (
-    <footer className="bg-text-dark text-bg-light py-8 text-center mt-auto">
+    <footer className="bg-neutral-dark text-neutral-light py-8 text-center mt-auto">
       <div className="container mx-auto px-4">
         <p className="text-sm">&copy; {new Date().getFullYear()} SimpleBlog. All rights reserved.</p>
       </div>
@@ -25,7 +25,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/post/:postId" element={<ViewBlogPage />} />
-          <Route path="/login" element={<AdminLoginPage />} />
+          <Route path="/admin-login" element={<AdminLoginPage />} />
           <Route 
             path="/create-post" 
             element={

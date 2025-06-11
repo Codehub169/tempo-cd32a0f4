@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
       if (!user) { // Only fetch user if not already set (e.g. from login)
         apiClient.get('/auth/me')
           .then(response => {
-            setUser(response.data.user);
+            setUser(response.data); // Corrected: response.data is the user object
           })
           .catch(err => {
             console.error('Failed to fetch user or token invalid:', err.response ? err.response.data : err.message);

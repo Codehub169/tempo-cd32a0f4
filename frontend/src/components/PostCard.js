@@ -11,47 +11,51 @@ const formatDate = (dateString) => {
         });
     } catch (error) {
         console.error('Error formatting date:', dateString, error);
-        return dateString; 
+        // Fallback to returning the original string if formatting fails
+        const datePart = dateString.split('T')[0];
+        return datePart; 
     }
 };
 
 const ArrowRightIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-1.5 transition-transform group-hover:translate-x-1">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-1.5 transition-transform group-hover:translate-x-1" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
     </svg>
 );
 
 function PostCard({ post }) {
-    if (!post || !post.id) return null;
+    // Ensure post and post.id exist before trying to render
+    if (!post || typeof post.id === 'undefined') return null;
 
-    let excerpt = post.content || '';
-    // Basic excerpt: take the first 150 characters. 
-    // A more robust solution might parse HTML or look for sentence/paragraph endings.
-    const plainTextContent = excerpt.replace(/<[^>]+>/g, ''); // Strip HTML for excerpt
+    const postTitle = post.title || 'Untitled Post';
+    const postContent = post.content || '';
+    
+    // Basic excerpt: strip HTML and take the first 150 characters.
+    const plainTextContent = postContent.replace(/<[^>]+>/g, ''); 
+    let excerpt = plainTextContent;
     if (plainTextContent.length > 150) {
         excerpt = plainTextContent.substring(0, 150) + '...';
-    } else {
-        excerpt = plainTextContent;
     }
 
     return (
         <article className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
             <div className="p-5 sm:p-6 flex flex-col flex-grow">
                 <Link to={`/post/${post.id}`} className="block mb-1 sm:mb-2">
-                    <h2 className="font-secondary text-lg sm:text-xl font-semibold text-neutral-800 hover:text-primary-500 transition-colors leading-tight">
-                        {post.title || 'Untitled Post'}
+                    <h2 className="font-secondary text-lg sm:text-xl font-semibold text-neutral-dark hover:text-primary transition-colors leading-tight">
+                        {postTitle}
                     </h2>
                 </Link>
-                <p className="text-xs sm:text-sm text-neutral-500 mb-3 sm:mb-4">
+                <p className="text-xs sm:text-sm text-secondary mb-3 sm:mb-4">
                     Published on {formatDate(post.created_at)}
                     {post.author && post.author.username && <span className="italic"> by {post.author.username}</span>}
                 </p>
-                <p className="text-neutral-600 text-sm sm:text-base leading-relaxed mb-4 sm:mb-5 flex-grow">
+                <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-4 sm:mb-5 flex-grow">
                     {excerpt}
                 </p>
                 <Link 
                     to={`/post/${post.id}`} 
-                    className="group self-start inline-flex items-center text-sm sm:text-base font-semibold text-primary-500 hover:text-accent-500 transition-colors"
+                    className="group self-start inline-flex items-center text-sm sm:text-base font-semibold text-primary hover:text-accent transition-colors"
+                    aria-label={`Read more about ${postTitle}`}
                 >
                     Read More 
                     <ArrowRightIcon />

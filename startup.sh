@@ -44,16 +44,13 @@ if [ ! -f "$ENV_FILE" ]; then
     # Generate a new secret key. For production, this should be a strong, random key.
     SECRET_KEY_VALUE=$("$PYTHON_EXEC" -c 'import secrets; print(secrets.token_hex(24))')
     echo "SECRET_KEY=$SECRET_KEY_VALUE" >> "$ENV_FILE"
-    echo "ADMIN_USERNAME=admin" >> "$ENV_FILE"         # Placeholder for admin user, to be used by models.py later
-    echo "ADMIN_PASSWORD=adminpassword" >> "$ENV_FILE" # Placeholder for admin pass, to be used by models.py later
-    echo "INFO: Default .env file created. Database tables and admin user will be set up in a subsequent step when models are defined."
+    echo "ADMIN_USERNAME=admin" >> "$ENV_FILE"
+    echo "ADMIN_PASSWORD=adminpassword" >> "$ENV_FILE"
+    echo "# INFO: Default .env file created. The ADMIN_USERNAME and ADMIN_PASSWORD are placeholders." >> "$ENV_FILE"
+    echo "# These credentials are NOT automatically used to create an admin user by this script or the application's initial setup." >> "$ENV_FILE"
+    echo "# An admin user must be created manually (e.g., via a Flask shell command or a separate setup script) after database initialization and schema creation." >> "$ENV_FILE"
+    echo "# The backend does not currently have an automated mechanism to create an admin user from these .env variables on startup." >> "$ENV_FILE"
 fi
-
-# Load environment variables (Flask app will also load them via python-dotenv)
-# set -a 
-# source "$ENV_FILE"
-# set +a
-
 
 # --- Frontend Setup ---
 echo "Setting up React frontend..."
@@ -83,8 +80,7 @@ fi
 # --- Run Application ---
 echo "Frontend build complete. Static files are in $FRONTEND_DIR/build"
 echo "Starting Flask application on port 9000..."
-echo "Note: Database tables and initial data (like admin user) need to be set up once models.py is implemented."
-echo "You might need to run database migrations or initialization commands separately after models are defined."
+echo "Note: Database tables and initial data (like admin user) need to be set up once models.py is implemented and migrations are run."
 
 cd "$BACKEND_DIR" || { echo "Failed to cd to backend directory"; exit 1; }
 
@@ -93,5 +89,4 @@ export FLASK_APP=run.py
 export FLASK_ENV=development
 
 # The Flask app in run.py will be configured to serve static files from frontend/build
-# and a basic health check API.
 "$PYTHON_EXEC" run.py
