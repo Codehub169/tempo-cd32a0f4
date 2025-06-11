@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-// import api from '../services/api'; // Will be used once api.js is implemented
+import api from '../services/api'; // Using the API client
 
 const BackArrow = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 mr-2" aria-hidden="true">
     <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
   </svg>
 );
@@ -17,44 +17,18 @@ const ViewBlogPage = () => {
   useEffect(() => {
     const fetchPost = async () => {
       setLoading(true);
+      setError(null); // Clear previous errors
       try {
-        // const response = await api.getPostById(postId); // Assuming api.getPostById() exists
-        // setPost(response.data); // Adjust based on actual API response structure
-        // Placeholder data:
-        const dummyPosts = {
-          '1': {
-            id: 1,
-            title: 'The Future of Web Development',
-            created_at: '2023-10-26T10:00:00Z',
-            user: { username: 'Admin' },
-            content: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><h2>Key Trends to Watch</h2><p>Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue.</p><h3>Trend 1: Artificial Intelligence Integration</h3><p>Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem.</p><blockquote>"The best way to predict the future is to invent it." - Alan Kay</blockquote>'
-          },
-          '2': {
-            id: 2,
-            title: 'Mastering Python for Data Science',
-            created_at: '2023-10-20T14:30:00Z',
-            user: { username: 'Admin' },
-            content: '<p>Python\'s simplicity and power have made it a cornerstone in the field of data science.</p><h2>Core Libraries</h2><p>NumPy, Pandas, Matplotlib, Seaborn, Scikit-learn.</p>'
-          },
-           '3': {
-            id: 3,
-            title: 'A Guide to Minimalist Design',
-            created_at: '2023-10-15T09:15:00Z',
-            user: { username: 'Admin' },
-            content: '<p>Minimalism in design is not just about less; it\'s about making \'less\' more impactful.</p><h2>Principles of Minimalism</h2><ul><li>Whitespace</li><li>Flat design</li><li>Strong typography</li></ul>'
-          }
-        };
-        if (dummyPosts[postId]) {
-          setPost(dummyPosts[postId]);
-          setError(null);
-        } else {
-          setError('Post not found.');
-          setPost(null);
-        }
+        const response = await api.get(`/posts/${postId}`); // Fetch actual post by ID
+        setPost(response.data); // The backend returns the post object directly in response.data
       } catch (err) {
-        setError('Failed to fetch post. Please try again later.');
-        console.error('Error fetching post:', err);
-        setPost(null);
+        console.error('Error fetching post:', err.response ? err.response.data : err.message);
+        if (err.response && err.response.status === 404) {
+          setError('Post not found.');
+        } else {
+          setError('Failed to fetch post. Please try again later.');
+        }
+        setPost(null); // Clear post data on error
       } finally {
         setLoading(false);
       }
@@ -62,6 +36,11 @@ const ViewBlogPage = () => {
 
     if (postId) {
       fetchPost();
+    } else {
+      // Handle case where postId is not present (e.g., invalid route parameter)
+      setError('Invalid post ID specified.');
+      setLoading(false);
+      setPost(null);
     }
 
   }, [postId]);
@@ -80,13 +59,12 @@ const ViewBlogPage = () => {
   }
 
   if (error) {
-    return <div className="container mx-auto px-4 py-8 text-center text-status-error">{error}</div>;
+    return <div className="container mx-auto px-4 py-8 text-center text-status-error" role="alert">{error}</div>;
   }
 
   if (!post) {
-    // This will be shown if fetchPost completes without setting post AND without setting an error.
-    // Given current fetchPost logic, this state is unlikely unless postId is initially undefined/null.
-    return <div className="container mx-auto px-4 py-8 text-center">Post details are unavailable.</div>;
+    // This case might be hit if postId is invalid or fetch fails without specific error message shown above
+    return <div className="container mx-auto px-4 py-8 text-center" role="alert">Post details are unavailable.</div>;
   }
 
   return (
@@ -97,9 +75,15 @@ const ViewBlogPage = () => {
         </h1>
         <p className="text-base text-secondary mb-8">
           Published on {new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} 
-          {post.user && `by ${post.user.username}`}
+          {/* Updated to use post.author_username from API response */}
+          {post.author_username && ` by ${post.author_username}`}
         </p>
-        {/* Backend should sanitize this HTML content before sending it to prevent XSS */}
+        {/* 
+          Backend is expected to sanitize this HTML content before sending it to prevent XSS. 
+          The 'prose-*' classes below apply styles to child elements (h2, h3, a, blockquote, etc.).
+          These work due to Tailwind's JIT child selector generation, even without the @tailwindcss/typography plugin.
+          If @tailwindcss/typography plugin were used, it would provide base styling for the 'prose' class itself.
+        */}
         <div 
           className="prose prose-lg max-w-none text-gray-700 leading-relaxed prose-h2:font-secondary prose-h2:text-2xl prose-h2:md:text-3xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-neutral-dark prose-h3:font-secondary prose-h3:text-xl prose-h3:md:text-2xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-neutral-dark prose-a:text-primary prose-a:font-medium hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-6 prose-blockquote:my-6 prose-blockquote:italic prose-blockquote:text-secondary"
           dangerouslySetInnerHTML={{ __html: post.content }}
