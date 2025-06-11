@@ -52,6 +52,46 @@ if [ ! -f "$ENV_FILE" ]; then
     echo "# The backend does not currently have an automated mechanism to create an admin user from these .env variables on startup." >> "$ENV_FILE"
 fi
 
+# --- Database Migrations ---
+echo "Setting up database..."
+# Ensure we are in the backend directory for Flask commands
+cd "$BACKEND_DIR" || { echo "Failed to cd to backend directory for migrations"; exit 1; }
+
+# Set Flask environment variables for CLI commands. 
+# Flask should pick these up from the .env file, but explicit export is safer for scripts.
+export FLASK_APP=run.py
+export FLASK_ENV=development
+
+# Initialize migrations directory if it doesn't exist
+if [ ! -d "migrations" ]; then
+    echo "Initializing database migrations folder (flask db init)..."
+    "$PYTHON_EXEC" -m flask db init
+    if [ $? -ne 0 ]; then
+        echo "Warning: 'flask db init' failed. If migrations folder was manually created or init was partial, subsequent steps might still work."
+    fi
+fi
+
+# Generate migration script if model changes are detected or if no migrations exist
+echo "Generating migration script if model changes are detected (flask db migrate)..."
+"$PYTHON_EXEC" -m flask db migrate -m "Initial schema or auto-detected model changes"
+# This command will exit with 0 if no changes are detected and migrations are up to date.
+# It will create a new migration script if changes are found or if it's the first migration.
+if [ $? -ne 0 ]; then
+    # Check if the error is just "No changes detected" - this is not a true error for our flow.
+    # However, `flask db migrate` failing for other reasons (e.g. can't connect to DB) is an issue.
+    # For simplicity, we'll proceed to upgrade, which will handle the state of migrations.
+    echo "Warning: 'flask db migrate' reported an issue or no changes. Proceeding to upgrade."
+fi
+
+# Apply migrations to the database
+echo "Applying migrations to the database (flask db upgrade)..."
+"$PYTHON_EXEC" -m flask db upgrade
+if [ $? -ne 0 ]; then
+    echo "Critical: Failed to apply database migrations (flask db upgrade). The application might not work correctly."
+    echo "Please check your database configuration, model definitions, and previous migration steps."
+    exit 1
+fi
+
 # --- Frontend Setup ---
 echo "Setting up React frontend..."
 cd "$FRONTEND_DIR" || { echo "Failed to cd to frontend directory"; exit 1; }
@@ -80,11 +120,11 @@ fi
 # --- Run Application ---
 echo "Frontend build complete. Static files are in $FRONTEND_DIR/build"
 echo "Starting Flask application on port 9000..."
-echo "Note: Database tables and initial data (like admin user) need to be set up once models.py is implemented and migrations are run."
 
 cd "$BACKEND_DIR" || { echo "Failed to cd to backend directory"; exit 1; }
 
 # Ensure Flask can find the app and is in development mode (enables debugger and reloader)
+# These are already exported for the migration steps, but re-affirming here before app run is fine.
 export FLASK_APP=run.py
 export FLASK_ENV=development
 
