@@ -1,12 +1,12 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function AdminLoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(''); // Local error for form validation or login failures
-    const { login, error: authContextError, clearError: authClearError, isLoading } = useContext(AuthContext);
+    const { login, error: authContextError, clearError: authClearError, isLoading } = useAuth();
     // useNavigate is not directly used here for navigation after login, as AuthContext handles it.
 
     const handleSubmit = async (e) => {
@@ -70,7 +70,7 @@ function AdminLoginPage() {
                             aria-describedby={error && email.trim() === '' ? "emailErrorText" : undefined}
                         />
                         {/* Example inline error, not used if global error alert is preferred
-                        {error && email.trim() === '' && <p className="text-red-600 text-xs italic mt-1" id="emailErrorText">Please enter a valid email.</p>} 
+                        {error && email.trim() === '' && <p className="text-red-600 text-xs italic mt-1" id=\"emailErrorText\">Please enter a valid email.</p>} 
                         */}
                     </div>
                     
@@ -91,7 +91,7 @@ function AdminLoginPage() {
                             aria-describedby={error && password.trim() === '' ? "passwordErrorText" : undefined}
                         />
                          {/* Example inline error
-                         {error && password.trim() === '' && <p className="text-red-600 text-xs italic mt-1" id="passwordErrorText">Password is required.</p>} 
+                         {error && password.trim() === '' && <p className="text-red-600 text-xs italic mt-1" id=\"passwordErrorText\">Password is required.</p>} 
                          */}
                     </div>
                     

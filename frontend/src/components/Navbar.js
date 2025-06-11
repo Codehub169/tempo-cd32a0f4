@@ -1,10 +1,10 @@
-import React, { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
-    const { isAuthenticated, user, logout } = useContext(AuthContext);
-    const navigate = useNavigate();
+    const { isAuthenticated, user, logout } = useAuth();
+    // useNavigate is not used here, so it can be removed if desired, but not strictly an error.
 
     const handleLogout = async () => {
         try {

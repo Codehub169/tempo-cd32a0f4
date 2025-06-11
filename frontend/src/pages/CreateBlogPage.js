@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api'; // This imports apiClient as default
 
 function CreateBlogPage() {
@@ -8,7 +8,21 @@ function CreateBlogPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { token } = useContext(AuthContext);
+    // const { token } = useAuth(); // Token is now handled by the apiClient interceptor/defaults
+
+    useEffect(() => {
+        let timerId;
+        if (success) {
+            timerId = setTimeout(() => {
+                setSuccess('');
+            }, 3000);
+        }
+        return () => {
+            if (timerId) {
+                clearTimeout(timerId);
+            }
+        };
+    }, [success]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -24,18 +38,11 @@ function CreateBlogPage() {
 
         try {
             // api is the axios instance from ../services/api.js
-            await api.post('/posts', { title, content }, {
-                headers: {
-                    'Authorization': `Bearer ${token}` // Token is already added by interceptor in api.js, but explicit here is also fine.
-                }
-            });
+            // Authorization header is automatically added by the interceptor in api.js or defaults set by AuthContext
+            await api.post('/posts', { title, content });
             setSuccess('Blog post published successfully!');
             setTitle('');
             setContent('');
-            // Clear success message after a few seconds
-            const timer = setTimeout(() => setSuccess(''), 3000);
-            // It's good practice to clear timers on component unmount if the component could unmount before the timer fires.
-            // However, in this specific case (form submission success), it's less critical.
         } catch (err) {
             setError(err.response?.data?.message || err.message || 'Failed to publish post.');
         } finally {
