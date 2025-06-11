@@ -4,8 +4,10 @@ import HomePage from './pages/HomePage';
 import ViewBlogPage from './pages/ViewBlogPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import CreateBlogPage from './pages/CreateBlogPage';
+import SignupPage from './pages/SignupPage'; // Import SignupPage
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+// import NotFoundPage from './pages/NotFoundPage'; // Example for a 404 page
 
 const Footer = () => {
   return (
@@ -19,13 +21,14 @@ const Footer = () => {
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-neutral-light">
       <Navbar />
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/post/:postId" element={<ViewBlogPage />} />
           <Route path="/admin-login" element={<AdminLoginPage />} />
+          <Route path="/signup" element={<SignupPage />} /> {/* Add route for SignupPage */}
           <Route 
             path="/create-post" 
             element={
